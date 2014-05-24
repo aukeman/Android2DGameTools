@@ -83,16 +83,14 @@ public class Sprite implements IDrawable{
 		this.mHeight = height;
 		this.mTextureId = Shaders.loadTexture(context, textureId);
 		
-		this.mTextureFrameIdx = textureFrameIdx;
-	
 		ByteBuffer bb = ByteBuffer.allocateDirect(4*3*4);
 		bb.order(ByteOrder.nativeOrder());
 		
 		mVertices = bb.asFloatBuffer();
-		mVertices.put(new float[] { 0.0f - this.mReferenceX,       0.0f - this.mReferenceY,         0.0f,
-				                    0.0f - this.mReferenceX,       1.0f*height - this.mReferenceY,  0.0f,
+		mVertices.put(new float[] { 0.0f       - this.mReferenceX, 0.0f        - this.mReferenceY,  0.0f,
+				                    0.0f       - this.mReferenceX, 1.0f*height - this.mReferenceY,  0.0f,
 				                    1.0f*width - this.mReferenceX, 1.0f*height - this.mReferenceY,  0.0f,
-				                    1.0f*width - this.mReferenceX, 0.0f - this.mRotationAngle,      0.0f });
+				                    1.0f*width - this.mReferenceX, 0.0f        - this.mReferenceY,  0.0f });
 		mVertices.position(0);
 		
 		mTextureCoordinates = new FloatBuffer[textureColumns*textureRows];
@@ -125,7 +123,7 @@ public class Sprite implements IDrawable{
 		mDrawOrder.put(new short[] { 0, 1, 2, 0, 2, 3 });
 		mDrawOrder.position(0);
 		  
-		setTextureFrameIdx(0);
+		setTextureFrameIdx(textureFrameIdx);
 	}
 	
 	public float getX() { return this.mX; }

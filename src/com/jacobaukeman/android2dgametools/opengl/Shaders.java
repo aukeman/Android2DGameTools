@@ -27,14 +27,15 @@ public class Shaders {
 		"precision mediump float;" +
 		"varying vec2 vTexCoordinate;" +
 	    "uniform sampler2D uTexture; " +
+		"uniform vec4 uColor;" +
 		"void main() {" +
-//	    " gl_FragColor = uColor;" +
+	    " gl_FragColor = uColor;" +
 	    "  vec4 textureColor = texture2D(uTexture, vTexCoordinate);" +
 		"  bvec4 is_equal = equal( textureColor, vec4( 1.0, 0.0, 1.0, 1.0 ) );" +
 		"  if ( all(is_equal) ){" +
 		"    discard;" +
 		"  }" +
-		"  gl_FragColor = textureColor;" +
+		"  gl_FragColor *= textureColor;" +
 		"}";
 	
 	private static int ourVertexShaderId;
@@ -51,10 +52,16 @@ public class Shaders {
 
 	private static int ourTextureHandle;
 	
+	private static int ourColorHandle;
+	
 	private static int ourLastTextureId;
+	
+	private static FloatBuffer ourWhiteColor;
 	
 	static {
 		clearIdsAndHandles();
+		
+		ourWhiteColor = FloatBuffer.wrap( new float[] { 1.0f, 1.0f, 1.0f, 1.0f } );
 	}
 	
 	public static void initialize(){
@@ -90,16 +97,18 @@ public class Shaders {
 		getTextureHandle();
 		checkGlError("get texture handle");
 		
+		getColorHandle();
+		checkGlError("get color handle");
+		
 		GLES20.glUseProgram(getProgramId());
 		
 		GLES20.glEnableVertexAttribArray(getPositionHandle());
 		GLES20.glEnableVertexAttribArray(getTextureCoordinatesHandle());
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glUniform1i(getTextureHandle(), 0);
+		GLES20.glUniform4fv(getColorHandle(), 4, ourWhiteColor);
 		
 		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-
-
 	}
 	
 	public static int getVertexShaderId(){
@@ -163,14 +172,29 @@ public class Shaders {
 		
 		return ourTextureHandle;
 	}
+	
+	public static int getColorHandle(){
+		if ( ourColorHandle < 0 ){
+			ourColorHandle = GLES20.glGetUniformLocation(getProgramId(), "uColor");
+		}
+		
+		return ourColorHandle;
+	}
 
 	public static void render(int numberOfVertices, FloatBuffer vertices, FloatBuffer textureCoords, ShortBuffer drawOrder, int textureId, float[] mvpMatrix){
+		
+		render(numberOfVertices, vertices, ourWhiteColor, textureCoords, drawOrder, textureId, mvpMatrix);
+	}
+	
+	public static void render(int numberOfVertices, FloatBuffer vertices, FloatBuffer color, FloatBuffer textureCoords, ShortBuffer drawOrder, int textureId, float[] mvpMatrix){
 		
 		if (textureId != ourLastTextureId )
 		{
 			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
 			ourLastTextureId = textureId;
 		}
+		
+		GLES20.glUniform4fv(getColorHandle(), 1, color);
 		
 		GLES20.glVertexAttribPointer(getPositionHandle(), 3, GLES20.GL_FLOAT, false, 0, vertices);
 		GLES20.glVertexAttribPointer(getTextureCoordinatesHandle(), 2, GLES20.GL_FLOAT, false, 0, textureCoords);
@@ -266,6 +290,7 @@ public class Shaders {
 		ourMVPMatrixHandle = -1;
 		ourTexCoordinateHandle = -1;
 		ourTextureHandle = -1;
+		ourColorHandle = -1;
 		
 		ourLastTextureId = -1;
 	}
